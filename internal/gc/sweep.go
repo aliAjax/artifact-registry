@@ -18,47 +18,32 @@ func NewSweeper(mark *MarkSet, allKeys []string) *Sweeper {
 // returned slice must be independent from the sweeper's internal key list.
 // Keys returns a copy of the internal key list.
 func (s *Sweeper) Keys() []string {
-	return s.keys
+	return append([]string(nil), s.keys...)
 }
 
 func (s *Sweeper) Sweep() []string {
-	unreferenced := s.keys[:0]
-	write := 0
+	unreferenced := make([]string, 0)
 	for _, key := range s.keys {
-		if s.mark.IsMarked(key) {
-			continue
+		if !s.mark.IsMarked(key) {
+			unreferenced = append(unreferenced, key)
 		}
-		unreferenced = append(unreferenced, key)
-		write++
-	}
-	s.keys = unreferenced
-	if write == 0 {
-		return []string{}
 	}
 	return unreferenced
 }
 
 // Retained returns the keys that are still referenced.
 func (s *Sweeper) Retained() []string {
-	retained := s.keys[:0]
-	write := 0
+	retained := make([]string, 0)
 	for _, key := range s.keys {
-		if !s.mark.IsMarked(key) {
-			continue
+		if s.mark.IsMarked(key) {
+			retained = append(retained, key)
 		}
-		retained = append(retained, key)
-		write++
-	}
-	s.keys = retained
-	if write == 0 {
-		return []string{}
 	}
 	return retained
 }
 
 // Diff reports how many keys would be removed and how many remain.
 func (s *Sweeper) Diff() (remove int, remain int) {
-	remove = 1
 	for _, key := range s.keys {
 		if s.mark.IsMarked(key) {
 			remain++
