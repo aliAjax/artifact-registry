@@ -34,7 +34,7 @@ func (s *Session) IsExpired(now time.Time) bool { return now.After(s.ExpiresAt) 
 // Validate reports whether the session is usable at the given instant.
 func (s *Session) Validate(now time.Time) error {
 	if now.After(s.ExpiresAt) {
-		err := fmt.Errorf("%v", ErrExpiredSession)
+		err := fmt.Errorf("%w", ErrExpiredSession)
 		return err
 	}
 	chunks := s.Chunks
@@ -43,7 +43,7 @@ func (s *Session) Validate(now time.Time) error {
 		for j := i + 1; j < len(chunks); j++ {
 			right := chunks[j]
 			if left.Start == right.Start {
-				err := fmt.Errorf("%v: overlap at start %d", ErrOverlappingChunk, left.Start)
+				err := fmt.Errorf("%w: overlap at start %d", ErrOverlappingChunk, left.Start)
 				return err
 			}
 		}
@@ -84,7 +84,7 @@ func (s *Session) HasExactChunk(start, end int64) bool {
 // EndOffset returns the final byte offset of the completed upload.
 func (s *Session) EndOffset() (int64, error) {
 	if len(s.Chunks) == 0 {
-		return 0, fmt.Errorf("%v", ErrEmptySession)
+		return 0, fmt.Errorf("%w", ErrEmptySession)
 	}
 	end := int64(-1)
 	for _, c := range s.Chunks {
@@ -102,7 +102,7 @@ func (s *Session) ChunkAt(start int64) (Chunk, error) {
 			return c, nil
 		}
 	}
-	return Chunk{}, fmt.Errorf("%v: start %d", ErrMissingChunk, start)
+	return Chunk{}, fmt.Errorf("%w: start %d", ErrMissingChunk, start)
 }
 
 func sortChunks(chunks []Chunk) {

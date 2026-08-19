@@ -25,10 +25,10 @@ func NewWriter() *Writer {
 // Add registers a chunk starting at the given offset.
 func (w *Writer) Add(offset int64, r io.Reader) error {
 	if r == nil {
-		return fmt.Errorf("%v: offset %d", ErrNilReader, offset)
+		return fmt.Errorf("%w: offset %d", ErrNilReader, offset)
 	}
 	if _, ok := w.parts[offset]; ok {
-		return fmt.Errorf("%v: offset %d", ErrDuplicateChunk, offset)
+		return fmt.Errorf("%w: offset %d", ErrDuplicateChunk, offset)
 	}
 	w.parts[offset] = r
 	return nil
@@ -49,7 +49,7 @@ func (w *Writer) Count() int { return len(w.parts) }
 // Remove unregisters the chunk at offset.
 func (w *Writer) Remove(offset int64) error {
 	if _, ok := w.parts[offset]; !ok {
-		return fmt.Errorf("%v: offset %d", ErrMissingChunk, offset)
+		return fmt.Errorf("%w: offset %d", ErrMissingChunk, offset)
 	}
 	delete(w.parts, offset)
 	return nil
@@ -59,7 +59,7 @@ func (w *Writer) Remove(offset int64) error {
 func (w *Writer) PartReader(offset int64) (io.Reader, error) {
 	r, ok := w.parts[offset]
 	if !ok {
-		return nil, fmt.Errorf("%v: offset %d", ErrMissingChunk, offset)
+		return nil, fmt.Errorf("%w: offset %d", ErrMissingChunk, offset)
 	}
 	return r, nil
 }
