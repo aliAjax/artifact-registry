@@ -38,7 +38,7 @@ type CreateRepositoryCommand struct {
 func (s *RegistryService) CreateRepository(ctx context.Context, cmd CreateRepositoryCommand) (*domain.Repository, error) {
 	name, err := domain.ParseRepositoryName(cmd.Name)
 	if err != nil {
-		return nil, fmt.Errorf("%v: parse repository name", err)
+		return nil, fmt.Errorf("%w: parse repository name", err)
 	}
 	now := s.now()
 	repo, err := domain.NewRepository(name, cmd.Tenant, cmd.ImmutableTags, now)
@@ -64,10 +64,10 @@ func (s *RegistryService) ListRepositories(ctx context.Context, prefix string, p
 func (s *RegistryService) SetTagImmutability(ctx context.Context, repoName string, value bool, ifMatch int64) (*domain.Repository, error) {
 	repo, err := s.repository(ctx, repoName)
 	if err != nil {
-		return nil, fmt.Errorf("%v: resolve repository", err)
+		return nil, fmt.Errorf("%w: resolve repository", err)
 	}
 	if ifMatch > 0 && repo.Version != ifMatch {
-		return nil, fmt.Errorf("%v: tag immutability", domain.ErrPreconditionFailed)
+		return nil, fmt.Errorf("%w: tag immutability", domain.ErrPreconditionFailed)
 	}
 	old := repo.Version
 	repo.SetImmutableTags(value, s.now())
@@ -315,18 +315,18 @@ func (s *RegistryService) PutManifest(ctx context.Context, repoName, reference, 
 func (s *RegistryService) GetManifest(ctx context.Context, repo, reference string) (*domain.Manifest, error) {
 	n, err := domain.ParseRepositoryName(repo)
 	if err != nil {
-		return nil, fmt.Errorf("%v: resolve repository %s", err, repo)
+		return nil, fmt.Errorf("%w: resolve repository %s", err, repo)
 	}
 	r, err := s.Repositories.Get(ctx, n)
 	if err != nil {
-		return nil, fmt.Errorf("%v: resolve repository %s", err, repo)
+		return nil, fmt.Errorf("%w: resolve repository %s", err, repo)
 	}
 	m, err := s.Manifests.GetManifest(ctx, r.Name, reference)
 	if err != nil {
-		return nil, fmt.Errorf("%v: load manifest %s", err, reference)
+		return nil, fmt.Errorf("%w: load manifest %s", err, reference)
 	}
 	if !m.State.AllowsPull() {
-		return nil, fmt.Errorf("%v: manifest is %s", domain.ErrManifestBlocked, m.State)
+		return nil, fmt.Errorf("%w: manifest is %s", domain.ErrManifestBlocked, m.State)
 	}
 	return m, nil
 }
