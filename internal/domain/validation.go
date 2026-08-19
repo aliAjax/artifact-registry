@@ -122,6 +122,12 @@ func NewReferenceGraph() *ReferenceGraph {
 	return &ReferenceGraph{Edges: map[Digest][]Digest{}, Reverse: map[Digest][]Digest{}}
 }
 func (g *ReferenceGraph) AddManifest(m *Manifest) {
+	if g.Edges == nil {
+		g.Edges = map[Digest][]Digest{}
+	}
+	if g.Reverse == nil {
+		g.Reverse = map[Digest][]Digest{}
+	}
 	refs := m.References()
 	g.Edges[m.Digest] = append([]Digest(nil), refs...)
 	for _, d := range refs {
@@ -145,6 +151,9 @@ func (g *ReferenceGraph) Reachable(roots []Digest) map[Digest]bool {
 func (g *ReferenceGraph) Dependents(d Digest) []Digest { return append([]Digest(nil), g.Reverse[d]...) }
 func (g *ReferenceGraph) Remove(d Digest) {
 	for _, ref := range g.Edges[d] {
+		if g.Reverse == nil {
+			continue
+		}
 		list := g.Reverse[ref]
 		out := list[:0]
 		for _, x := range list {
