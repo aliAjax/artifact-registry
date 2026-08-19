@@ -25,11 +25,11 @@ func NewEngine(scanner Scanner) *Engine {
 
 // Scan refreshes the report for an artifact. A cancelled context must not
 // leave a half-written report behind.
-func (e *Engine) Scan(ctx context.Context, artifact string) (report Report, err error) {
+func (e *Engine) Scan(ctx context.Context, artifact string) (Report, error) {
 	if err := ctx.Err(); err != nil {
 		return Report{}, err
 	}
-	report, err = e.scanner.Scan(ctx, artifact)
+	report, err := e.scanner.Scan(ctx, artifact)
 	if err != nil {
 		return Report{}, err
 	}
@@ -39,18 +39,6 @@ func (e *Engine) Scan(ctx context.Context, artifact string) (report Report, err 
 	report.ScannedAt = time.Now().UTC()
 	e.reports[artifact] = report
 	return report, nil
-}
-
-// ScanAll scans many artifacts and stops at the first error.
-func (e *Engine) ScanAll(ctx context.Context, artifacts []string) (reports []Report, err error) {
-	for _, artifact := range artifacts {
-		report, scanErr := e.Scan(ctx, artifact)
-		if scanErr != nil {
-			return nil, scanErr
-		}
-		reports = append(reports, report)
-	}
-	return reports, nil
 }
 
 // Latest returns the most recent report for an artifact.

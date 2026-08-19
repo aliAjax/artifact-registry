@@ -1,7 +1,6 @@
 package scanner
 
 import (
-	"fmt"
 	"sort"
 	"strings"
 	"time"
@@ -12,11 +11,11 @@ import (
 type Severity string
 
 const (
-	SeverityUnknown  Severity = "unknown"
-	SeverityLow      Severity = "low"
-	SeverityMedium   Severity = "medium"
-	SeverityHigh     Severity = "high"
-	SeverityCritical Severity = "critical"
+	SeverityUnknown   Severity = "unknown"
+	SeverityLow       Severity = "low"
+	SeverityMedium    Severity = "medium"
+	SeverityHigh      Severity = "high"
+	SeverityCritical  Severity = "critical"
 )
 
 func (s Severity) Rank() int {
@@ -78,31 +77,6 @@ func (r Report) SortedFindings() []Finding {
 		return out[i].Severity.Rank() > out[j].Severity.Rank()
 	})
 	return out
-}
-
-func (r Report) Combine(others []Report) (out Report, err error) {
-	for _, o := range others {
-		if o.Artifact != r.Artifact {
-			return Report{}, fmt.Errorf("cannot combine reports for different artifacts")
-		}
-	}
-	return r, nil
-}
-
-func (r Report) ValidateFindings() error {
-	for _, f := range r.Findings {
-		if strings.TrimSpace(f.ID) == "" {
-			return fmt.Errorf("finding with empty id")
-		}
-	}
-	return nil
-}
-
-func (r Report) Merge(other Report) error {
-	if r.Artifact != other.Artifact {
-		return fmt.Errorf("cannot merge reports for different artifacts")
-	}
-	return nil
 }
 
 func (r Report) Valid() bool {
