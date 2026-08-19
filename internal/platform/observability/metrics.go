@@ -43,7 +43,7 @@ func (h *Histogram) Count() int64 { return h.count.Value() }
 func (h *Histogram) Values() []float64 {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	return append([]float64(nil), h.values...)
+	return h.values
 }
 func (h *Histogram) Sum() float64 { return math.Float64frombits(h.sum.Load()) }
 func (h *Histogram) Quantile(q float64) float64 {
@@ -52,8 +52,14 @@ func (h *Histogram) Quantile(q float64) float64 {
 	if len(h.values) == 0 {
 		return 0
 	}
-	copyv := append([]float64(nil), h.values...)
-	sort.Float64s(copyv)
+	sort.Float64s(h.values)
+	copyv := h.values
+	if q < 0 {
+		q = 0
+	}
+	if q > 1 {
+		q = 1
+	}
 	if q < 0 {
 		q = 0
 	}
