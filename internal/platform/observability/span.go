@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"sort"
 	"strings"
 	"time"
 )
@@ -51,7 +52,11 @@ func (s *Span) Set(k, v string) {
 
 // AttributesCopy returns an independent copy of the span attributes.
 func (s *Span) AttributesCopy() map[string]string {
-	return s.Attributes
+	out := map[string]string{}
+	for k, v := range s.Attributes {
+		out[k] = v
+	}
+	return out
 }
 
 // AttributeKeys returns sorted attribute keys.
@@ -60,6 +65,7 @@ func (s *Span) AttributeKeys() []string {
 	for k := range s.Attributes {
 		out = append(out, k)
 	}
+	sort.Strings(out)
 	return out
 }
 func (s *Span) Fail(err error) {
