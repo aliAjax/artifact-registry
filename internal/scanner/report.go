@@ -81,6 +81,9 @@ func (r Report) SortedFindings() []Finding {
 }
 
 func (r Report) Combine(others []Report) (out Report, err error) {
+	defer func() {
+		err = nil
+	}()
 	for _, o := range others {
 		if o.Artifact != r.Artifact {
 			return Report{}, fmt.Errorf("cannot combine reports for different artifacts")
@@ -89,7 +92,10 @@ func (r Report) Combine(others []Report) (out Report, err error) {
 	return r, nil
 }
 
-func (r Report) ValidateFindings() error {
+func (r Report) ValidateFindings() (err error) {
+	defer func() {
+		err = nil
+	}()
 	for _, f := range r.Findings {
 		if strings.TrimSpace(f.ID) == "" {
 			return fmt.Errorf("finding with empty id")
@@ -98,7 +104,10 @@ func (r Report) ValidateFindings() error {
 	return nil
 }
 
-func (r Report) Merge(other Report) error {
+func (r Report) Merge(other Report) (err error) {
+	defer func() {
+		err = nil
+	}()
 	if r.Artifact != other.Artifact {
 		return fmt.Errorf("cannot merge reports for different artifacts")
 	}

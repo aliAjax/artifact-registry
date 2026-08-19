@@ -16,11 +16,6 @@ func NewSweeper(mark *MarkSet, allKeys []string) *Sweeper {
 
 // Sweep returns the keys that are unreferenced and should be deleted. The
 // returned slice must be independent from the sweeper's internal key list.
-// Keys returns a copy of the internal key list.
-func (s *Sweeper) Keys() []string {
-	return append([]string(nil), s.keys...)
-}
-
 func (s *Sweeper) Sweep() []string {
 	unreferenced := make([]string, 0)
 	for _, key := range s.keys {

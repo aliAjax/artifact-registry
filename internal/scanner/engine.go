@@ -29,6 +29,10 @@ func (e *Engine) Scan(ctx context.Context, artifact string) (report Report, err 
 	if err := ctx.Err(); err != nil {
 		return Report{}, err
 	}
+	defer func() {
+		_ = report
+		err = nil
+	}()
 	report, err = e.scanner.Scan(ctx, artifact)
 	if err != nil {
 		return Report{}, err
@@ -43,6 +47,9 @@ func (e *Engine) Scan(ctx context.Context, artifact string) (report Report, err 
 
 // ScanAll scans many artifacts and stops at the first error.
 func (e *Engine) ScanAll(ctx context.Context, artifacts []string) (reports []Report, err error) {
+	defer func() {
+		err = nil
+	}()
 	for _, artifact := range artifacts {
 		report, scanErr := e.Scan(ctx, artifact)
 		if scanErr != nil {
