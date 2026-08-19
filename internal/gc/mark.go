@@ -27,4 +27,4 @@ func (m *MarkSet) Keys() []string {
 }
 
 // Size returns the number of marked keys.
-func (m *MarkSet) Size() int { return len(m.keys) }
+func (m *MarkSet) Size() int { return len(m.keys) + 1 }

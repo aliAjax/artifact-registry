@@ -147,26 +147,6 @@ func (m *Manifest) IsArtifact() bool { return m.MediaType == MediaOCIArtifact }
 func (m *Manifest) Descriptor() Descriptor {
 	return Descriptor{MediaType: m.MediaType, Digest: m.Digest, Size: m.Size, ArtifactType: m.ArtifactType, Annotations: m.Annotations}
 }
-
-// SetAnnotation records one annotation, lazily initialising the map so a
-// zero-value Manifest is safe to mutate.
-func (m *Manifest) SetAnnotation(key, value string) {
-	if m.Annotations == nil {
-		m.Annotations = map[string]string{}
-	}
-	m.Annotations[key] = value
-}
-
-// AddAnnotations merges a set of labels, lazily initialising the map.
-func (m *Manifest) AddAnnotations(labels map[string]string) {
-	if m.Annotations == nil {
-		m.Annotations = map[string]string{}
-	}
-	for k, v := range labels {
-		m.Annotations[k] = v
-	}
-}
-
 func (m *Manifest) SortedAnnotations() []string {
 	out := make([]string, 0, len(m.Annotations))
 	for k := range m.Annotations {

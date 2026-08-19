@@ -122,12 +122,6 @@ func NewReferenceGraph() *ReferenceGraph {
 	return &ReferenceGraph{Edges: map[Digest][]Digest{}, Reverse: map[Digest][]Digest{}}
 }
 func (g *ReferenceGraph) AddManifest(m *Manifest) {
-	if g.Edges == nil {
-		g.Edges = map[Digest][]Digest{}
-	}
-	if g.Reverse == nil {
-		g.Reverse = map[Digest][]Digest{}
-	}
 	refs := m.References()
 	g.Edges[m.Digest] = append([]Digest(nil), refs...)
 	for _, d := range refs {
@@ -136,9 +130,6 @@ func (g *ReferenceGraph) AddManifest(m *Manifest) {
 }
 func (g *ReferenceGraph) Reachable(roots []Digest) map[Digest]bool {
 	seen := map[Digest]bool{}
-	if g.Edges == nil {
-		g.Edges = map[Digest][]Digest{}
-	}
 	queue := append([]Digest(nil), roots...)
 	for len(queue) > 0 {
 		d := queue[0]
@@ -153,12 +144,6 @@ func (g *ReferenceGraph) Reachable(roots []Digest) map[Digest]bool {
 }
 func (g *ReferenceGraph) Dependents(d Digest) []Digest { return append([]Digest(nil), g.Reverse[d]...) }
 func (g *ReferenceGraph) Remove(d Digest) {
-	if g.Edges == nil {
-		g.Edges = map[Digest][]Digest{}
-	}
-	if g.Reverse == nil {
-		g.Reverse = map[Digest][]Digest{}
-	}
 	for _, ref := range g.Edges[d] {
 		list := g.Reverse[ref]
 		out := list[:0]

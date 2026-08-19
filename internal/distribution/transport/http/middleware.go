@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -155,30 +154,4 @@ func RequireTenant(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
-}
-
-// TimeoutMiddleware bounds a request with a context deadline so slow handlers
-// are cancelled deterministically.
-func TimeoutMiddleware(timeout time.Duration, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), timeout)
-		defer cancel()
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-// TenantMiddleware pins the tenant onto the request context for downstream
-// handlers that must not read the header twice.
-func TenantMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tenant := strings.TrimSpace(r.Header.Get("X-Tenant"))
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), tenantKey{}, tenant)))
-	})
-}
-
-type tenantKey struct{}
-
-// middlewareCtx returns the request context that handlers must use.
-func middlewareCtx(r *http.Request) context.Context {
-	return r.Context()
 }
