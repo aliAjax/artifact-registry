@@ -43,7 +43,9 @@ func (h *Histogram) Count() int64 { return h.count.Value() }
 func (h *Histogram) Values() []float64 {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	return h.values
+	out := make([]float64, len(h.values))
+	copy(out, h.values)
+	return out
 }
 func (h *Histogram) Sum() float64 { return math.Float64frombits(h.sum.Load()) }
 func (h *Histogram) Quantile(q float64) float64 {
@@ -52,21 +54,16 @@ func (h *Histogram) Quantile(q float64) float64 {
 	if len(h.values) == 0 {
 		return 0
 	}
-	sort.Float64s(h.values)
-	copyv := h.values
+	sorted := make([]float64, len(h.values))
+	copy(sorted, h.values)
+	sort.Float64s(sorted)
 	if q < 0 {
 		q = 0
 	}
 	if q > 1 {
 		q = 1
 	}
-	if q < 0 {
-		q = 0
-	}
-	if q > 1 {
-		q = 1
-	}
-	return copyv[int(float64(len(copyv)-1)*q)]
+	return sorted[int(float64(len(sorted)-1)*q)]
 }
 
 type Registry struct {
