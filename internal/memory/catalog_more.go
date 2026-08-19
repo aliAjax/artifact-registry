@@ -19,11 +19,13 @@ func (c *Catalog) PutTag(_ context.Context, repo domain.RepositoryName, v *domai
 	return nil
 }
 func (c *Catalog) GetTag(_ context.Context, repo domain.RepositoryName, name string) (*domain.Tag, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	v := c.tags[repo][name]
 	if v == nil {
 		return nil, domain.ErrTagNotFound
 	}
-	return v, nil
+	return copyTag(v), nil
 }
 func (c *Catalog) ListTags(_ context.Context, repo domain.RepositoryName, p domain.PageRequest) (domain.Page[*domain.Tag], error) {
 	c.mu.RLock()
@@ -65,11 +67,13 @@ func (c *Catalog) CreateUpload(_ context.Context, v *domain.UploadSession) error
 	return nil
 }
 func (c *Catalog) GetUpload(_ context.Context, id string) (*domain.UploadSession, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	v := c.uploads[id]
 	if v == nil {
 		return nil, domain.ErrUploadNotFound
 	}
-	return v, nil
+	return copyUpload(v), nil
 }
 func (c *Catalog) UpdateUpload(_ context.Context, v *domain.UploadSession, version int64) error {
 	c.mu.Lock()
@@ -107,11 +111,14 @@ func (c *Catalog) ListExpiredUploads(_ context.Context, now time.Time) ([]*domai
 	return out, nil
 }
 func (c *Catalog) GetQuota(_ context.Context, tenant string) (*domain.Quota, error) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
 	v := c.quotas[tenant]
 	if v == nil {
 		return nil, domain.ErrManifestNotFound
 	}
-	return v, nil
+	x := *v
+	return &x, nil
 }
 func (c *Catalog) PutQuota(_ context.Context, v *domain.Quota) error {
 	c.mu.Lock()
