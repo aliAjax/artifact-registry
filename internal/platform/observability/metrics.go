@@ -38,13 +38,6 @@ func (h *Histogram) Observe(v float64) {
 	h.sum.Store(math.Float64bits(h.Sum() + v))
 }
 func (h *Histogram) Count() int64 { return h.count.Value() }
-
-// Values returns a copy of the recorded observations.
-func (h *Histogram) Values() []float64 {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-	return append([]float64(nil), h.values...)
-}
 func (h *Histogram) Sum() float64 { return math.Float64frombits(h.sum.Load()) }
 func (h *Histogram) Quantile(q float64) float64 {
 	h.mu.Lock()

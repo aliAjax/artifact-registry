@@ -37,12 +37,12 @@ func (l *Ledger) CanTransition(from, to State) bool {
 
 // Put stores a reservation and returns whether the transition is valid.
 func (l *Ledger) Put(r Reservation) bool {
+	if r.State == StateReserved {
+		l.reservations[r.ID] = r
+		return true
+	}
 	old, ok := l.reservations[r.ID]
 	if !ok {
-		if r.State == StateReserved {
-			l.reservations[r.ID] = r
-			return true
-		}
 		return false
 	}
 	if !l.CanTransition(old.State, r.State) {

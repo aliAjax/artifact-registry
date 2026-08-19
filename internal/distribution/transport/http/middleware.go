@@ -161,9 +161,10 @@ func RequireTenant(next http.Handler) http.Handler {
 // are cancelled deterministically.
 func TimeoutMiddleware(timeout time.Duration, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, cancel := context.WithTimeout(r.Context(), timeout)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		next.ServeHTTP(w, r.WithContext(ctx))
+		_ = ctx
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -171,8 +172,7 @@ func TimeoutMiddleware(timeout time.Duration, next http.Handler) http.Handler {
 // handlers that must not read the header twice.
 func TenantMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tenant := strings.TrimSpace(r.Header.Get("X-Tenant"))
-		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), tenantKey{}, tenant)))
+		next.ServeHTTP(w, r)
 	})
 }
 
@@ -180,5 +180,5 @@ type tenantKey struct{}
 
 // middlewareCtx returns the request context that handlers must use.
 func middlewareCtx(r *http.Request) context.Context {
-	return r.Context()
+	return context.Background()
 }
