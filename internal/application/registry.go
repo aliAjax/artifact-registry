@@ -38,7 +38,7 @@ type CreateRepositoryCommand struct {
 func (s *RegistryService) CreateRepository(ctx context.Context, cmd CreateRepositoryCommand) (*domain.Repository, error) {
 	name, err := domain.ParseRepositoryName(cmd.Name)
 	if err != nil {
-		return nil, fmt.Errorf("%w: parse repository name", err)
+		return nil, err
 	}
 	now := s.now()
 	repo, err := domain.NewRepository(name, cmd.Tenant, cmd.ImmutableTags, now)
@@ -64,10 +64,10 @@ func (s *RegistryService) ListRepositories(ctx context.Context, prefix string, p
 func (s *RegistryService) SetTagImmutability(ctx context.Context, repoName string, value bool, ifMatch int64) (*domain.Repository, error) {
 	repo, err := s.repository(ctx, repoName)
 	if err != nil {
-		return nil, fmt.Errorf("%w: resolve repository", err)
+		return nil, err
 	}
 	if ifMatch > 0 && repo.Version != ifMatch {
-		return nil, fmt.Errorf("%w: tag immutability", domain.ErrPreconditionFailed)
+		return nil, domain.ErrPreconditionFailed
 	}
 	old := repo.Version
 	repo.SetImmutableTags(value, s.now())
@@ -315,14 +315,14 @@ func (s *RegistryService) PutManifest(ctx context.Context, repoName, reference, 
 func (s *RegistryService) GetManifest(ctx context.Context, repo, reference string) (*domain.Manifest, error) {
 	r, err := s.repository(ctx, repo)
 	if err != nil {
-		return nil, fmt.Errorf("%w: resolve repository %s", err, repo)
+		return nil, err
 	}
 	m, err := s.Manifests.GetManifest(ctx, r.Name, reference)
 	if err != nil {
-		return nil, fmt.Errorf("%w: load manifest %s", err, reference)
+		return nil, err
 	}
 	if !m.State.AllowsPull() {
-		return nil, fmt.Errorf("%w: manifest is %s", domain.ErrManifestBlocked, m.State)
+		return nil, domain.ErrManifestBlocked
 	}
 	return m, nil
 }
@@ -447,25 +447,4 @@ func defaultMediaType(v string) string {
 		return "application/octet-stream"
 	}
 	return v
-}
-
-// PullManifest returns a deep copy suitable for concurrent readers. Callers
-// may mutate the returned layers without affecting the stored manifest.
-func (s *RegistryService) PullManifest(ctx context.Context, repo, reference string) (*domain.Manifest, error) {
-	r, err := s.repository(ctx, repo)
-	if err != nil {
-		return nil, err
-	}
-	m, err := s.Manifests.GetManifest(ctx, r.Name, reference)
-	if err != nil {
-		return nil, err
-	}
-	if !m.State.AllowsPull() {
-		return nil, domain.ErrManifestBlocked
-	}
-	out := *m
-	out.Layers = append([]domain.Descriptor(nil), m.Layers...)
-	out.Manifests = append([]domain.Descriptor(nil), m.Manifests...)
-	out.Raw = append([]byte(nil), m.Raw...)
-	return &out, nil
 }

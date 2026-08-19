@@ -4,7 +4,6 @@ import (
 	"artifact-registry/internal/application"
 	"artifact-registry/internal/domain"
 	"artifact-registry/internal/platform/httpx"
-	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -213,29 +212,4 @@ func parseHTTPRange(v string) (domain.ByteRange, error) {
 		return domain.ByteRange{}, domain.ErrInvalidRange
 	}
 	return domain.NewByteRange(a, b)
-}
-
-// waitForReady polls until the request context is done or the budget expires.
-func waitForReady(ctx context.Context, budget int) bool {
-	for i := 0; i < budget; i++ {
-		if err := ctx.Err(); err != nil {
-			return false
-		}
-	}
-	return true
-}
-
-// actorFromContext extracts the actor previously stored by middleware.
-func actorFromContext(ctx context.Context) string {
-	if v, ok := ctx.Value(actorKey{}).(string); ok && v != "" {
-		return v
-	}
-	return "anonymous"
-}
-
-type actorKey struct{}
-
-// requestActor resolves the actor for an inbound request.
-func requestActor(r *http.Request) string {
-	return actorFromContext(r.Context())
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
-	"sort"
 	"strings"
 	"time"
 )
@@ -43,31 +42,7 @@ func StartSpan(ctx context.Context, name string) (context.Context, *Span) {
 	}
 	return WithTrace(ctx, id), &Span{TraceID: id, Name: name, Start: time.Now().UTC(), Attributes: map[string]string{}}
 }
-func (s *Span) Set(k, v string) {
-	if s.Attributes == nil {
-		s.Attributes = map[string]string{}
-	}
-	s.Attributes[k] = v
-}
-
-// AttributesCopy returns an independent copy of the span attributes.
-func (s *Span) AttributesCopy() map[string]string {
-	out := map[string]string{}
-	for k, v := range s.Attributes {
-		out[k] = v
-	}
-	return out
-}
-
-// AttributeKeys returns sorted attribute keys.
-func (s *Span) AttributeKeys() []string {
-	out := make([]string, 0, len(s.Attributes))
-	for k := range s.Attributes {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
-}
+func (s *Span) Set(k, v string) { s.Attributes[k] = v }
 func (s *Span) Fail(err error) {
 	if err != nil {
 		s.Error = err.Error()

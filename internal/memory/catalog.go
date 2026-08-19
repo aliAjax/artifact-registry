@@ -55,13 +55,11 @@ func (c *Catalog) Create(_ context.Context, v *domain.Repository) error {
 	return nil
 }
 func (c *Catalog) Get(_ context.Context, name domain.RepositoryName) (*domain.Repository, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
 	v, ok := c.repos[name]
 	if !ok {
 		return nil, domain.ErrManifestNotFound
 	}
-	return copyRepo(v), nil
+	return v, nil
 }
 func (c *Catalog) List(_ context.Context, prefix string, p domain.PageRequest) (domain.Page[*domain.Repository], error) {
 	c.mu.RLock()
@@ -98,13 +96,11 @@ func (c *Catalog) Update(_ context.Context, v *domain.Repository, version int64)
 	return nil
 }
 func (c *Catalog) GetBlob(_ context.Context, d domain.Digest) (*domain.Blob, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
 	v, ok := c.blobs[d]
 	if !ok {
 		return nil, domain.ErrBlobNotFound
 	}
-	return copyBlob(v), nil
+	return v, nil
 }
 func (c *Catalog) PutBlob(ctx context.Context, v *domain.Blob, r io.Reader) error {
 	c.mu.Lock()
@@ -178,8 +174,6 @@ func (c *Catalog) PutManifest(_ context.Context, repo domain.RepositoryName, v *
 	return nil
 }
 func (c *Catalog) GetManifest(_ context.Context, repo domain.RepositoryName, ref string) (*domain.Manifest, error) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
 	if t := c.tags[repo][ref]; t != nil {
 		ref = t.Digest.String()
 	}
