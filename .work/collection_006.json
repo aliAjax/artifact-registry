@@ -1,0 +1,74 @@
+{
+  "sample_id": 206,
+  "session_id": "",
+  "bug_id": "ar-defer-swallow-scan-006",
+  "task_type": "diagnosis",
+  "bug_category": "defer相关问题",
+  "repo_url": "",
+  "go_version": "golang:1.23; go 1.23.0; GOTOOLCHAIN=local",
+  "repro_determinism": "deterministic",
+  "user_query": "扫描引擎失败的时候不报错，合并不同 artifact 的报告也不报错。不要修改代码，帮我查清楚原因。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/scanner -run '^TestScanReturnsError$' -count=1\ngo test ./internal/scanner -run '^TestScanAllReturnsError$' -count=1\ngo test ./internal/scanner -run '^TestMergeRejectsDifferentArtifacts$' -count=1\ngo test ./internal/scanner -run '^TestCombineRejectsDifferentArtifacts$' -count=1\ngo test ./internal/scanner -run '^TestValidateFindingsReturnsError$' -count=1",
+  "gold_root_cause": "文件: internal/scanner/engine.go, internal/scanner/report.go 符号: Engine.Scan, Engine.ScanAll, Report.Merge, Report.Combine, Report.ValidateFindings 机制: 命名返回值配合 defer 把业务错误覆盖成 nil，扫描和校验失败被静默丢弃",
+  "gold_patch": "",
+  "success_criteria": "1. 扫描失败要返回错误，不同 artifact 的 Merge/Combine 要报错，空 finding id 校验要报错；2. 查的过程中不能改任何代码，差异必须为零；3. 结论要指出吞错的那段 defer 在哪一个文件；4. 说清楚这些错误为什么都变成了 nil。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "",
+  "creator": "",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "scan_returns_error",
+        "description": "Scan 返回扫描错误",
+        "test": "TestScanReturnsError",
+        "command": "go test ./internal/scanner -run '^TestScanReturnsError$' -count=1",
+        "paths": [
+          "internal/scanner/engine.go"
+        ]
+      },
+      {
+        "id": "scan_all_returns_error",
+        "description": "ScanAll 返回首个错误",
+        "test": "TestScanAllReturnsError",
+        "command": "go test ./internal/scanner -run '^TestScanAllReturnsError$' -count=1",
+        "paths": [
+          "internal/scanner/engine.go"
+        ]
+      },
+      {
+        "id": "merge_rejects_diff",
+        "description": "Merge 拒绝不同 artifact",
+        "test": "TestMergeRejectsDifferentArtifacts",
+        "command": "go test ./internal/scanner -run '^TestMergeRejectsDifferentArtifacts$' -count=1",
+        "paths": [
+          "internal/scanner/report.go"
+        ]
+      },
+      {
+        "id": "combine_rejects_diff",
+        "description": "Combine 拒绝不同 artifact",
+        "test": "TestCombineRejectsDifferentArtifacts",
+        "command": "go test ./internal/scanner -run '^TestCombineRejectsDifferentArtifacts$' -count=1",
+        "paths": [
+          "internal/scanner/report.go"
+        ]
+      },
+      {
+        "id": "validate_findings_error",
+        "description": "ValidateFindings 返回校验错误",
+        "test": "TestValidateFindingsReturnsError",
+        "command": "go test ./internal/scanner -run '^TestValidateFindingsReturnsError$' -count=1",
+        "paths": [
+          "internal/scanner/report.go"
+        ]
+      }
+    ]
+  }
+}

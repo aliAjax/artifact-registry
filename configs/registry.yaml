@@ -1,0 +1,5 @@
+httpAddr: ":8083"
+dataDir: "./data"
+uploadTTL: "24h"
+maxBlobSize: 10737418240
+defaultQuota: 10737418240

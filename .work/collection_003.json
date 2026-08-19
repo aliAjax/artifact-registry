@@ -1,0 +1,74 @@
+{
+  "sample_id": 203,
+  "session_id": "",
+  "bug_id": "ar-concurrency-lock-get-003",
+  "task_type": "diagnosis",
+  "bug_category": "concurrency并发问题",
+  "repo_url": "",
+  "go_version": "golang:1.23; go 1.23.0; GOTOOLCHAIN=local",
+  "repro_determinism": "deterministic",
+  "user_query": "并发跑 Catalog 的 Get 和 Create 一直报 data race，贴一段：\n==================\nWARNING: DATA RACE\nRead at 0x00c00019ae40 by goroutine 8:\n  artifact-registry/internal/artifact/infrastructure/memory.(*Catalog).Get()\n      internal/artifact/infrastructure/memory/catalog.go:58\nPrevious write at 0x00c00019ae40 by goroutine 9:\n先别改代码，帮我查清楚哪里没锁住。",
+  "trajectory": "",
+  "verify_cmds": "go test -race ./internal/memory -run '^TestGetDoesNotAlias$' -count=1\ngo test -race ./internal/memory -run '^TestGetBlobDoesNotAlias$' -count=1\ngo test -race ./internal/memory -run '^TestGetTagDoesNotAlias$' -count=1\ngo test -race ./internal/memory -run '^TestGetUploadDoesNotAlias$' -count=1\ngo test -race ./internal/memory -run '^TestCatalogConcurrentAccess$' -count=1",
+  "gold_root_cause": "文件: internal/memory/catalog.go, internal/memory/catalog_more.go 符号: Catalog.Get, Catalog.GetBlob, Catalog.GetTag, Catalog.GetUpload 机制: Get 类读方法不加读锁直接读内部 map 并返回内部指针，并发写入与读取共享 map 和底层引用产生竞态和引用逃逸",
+  "gold_patch": "",
+  "success_criteria": "1. -race 跑并发用例要稳定报 DATA RACE 并指向 Catalog.Get 读路径，四个 Get 返回的也得是副本；2. 排查时不能改任何文件，代码差异必须是零；3. 结论要指出没上锁的读路径在哪个文件；4. 讲明白为什么并发时才现竞态。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "",
+  "creator": "",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "get_no_alias",
+        "description": "Get 不返回内部指针",
+        "test": "TestGetDoesNotAlias",
+        "command": "go test -race ./internal/memory -run '^TestGetDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/memory/catalog.go"
+        ]
+      },
+      {
+        "id": "get_blob_no_alias",
+        "description": "GetBlob 不返回内部指针",
+        "test": "TestGetBlobDoesNotAlias",
+        "command": "go test -race ./internal/memory -run '^TestGetBlobDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/memory/catalog.go"
+        ]
+      },
+      {
+        "id": "get_tag_no_alias",
+        "description": "GetTag 不返回内部指针",
+        "test": "TestGetTagDoesNotAlias",
+        "command": "go test -race ./internal/memory -run '^TestGetTagDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/memory/catalog_more.go"
+        ]
+      },
+      {
+        "id": "get_upload_no_alias",
+        "description": "GetUpload 不返回内部指针",
+        "test": "TestGetUploadDoesNotAlias",
+        "command": "go test -race ./internal/memory -run '^TestGetUploadDoesNotAlias$' -count=1",
+        "paths": [
+          "internal/memory/catalog_more.go"
+        ]
+      },
+      {
+        "id": "catalog_concurrent_access",
+        "description": "并发 Get/Create 稳定报竞态",
+        "test": "TestCatalogConcurrentAccess",
+        "command": "go test -race ./internal/memory -run '^TestCatalogConcurrentAccess$' -count=1",
+        "paths": [
+          "internal/memory/catalog.go"
+        ]
+      }
+    ]
+  }
+}

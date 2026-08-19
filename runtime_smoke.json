@@ -1,0 +1,11 @@
+{
+  "mode": "service",
+  "start": "go run ./cmd/registry",
+  "workdir": ".",
+  "env": {
+    "REGISTRY_HTTP_ADDR": ":18080"
+  },
+  "ready_url": "http://127.0.0.1:18080/healthz",
+  "ready_status": [200, 204],
+  "startup_timeout": 20
+}

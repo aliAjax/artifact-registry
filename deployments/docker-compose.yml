@@ -1,0 +1,7 @@
+services:
+  registry:
+    build: ..
+    ports: ["8083:8083"]
+    environment: {REGISTRY_HTTP_ADDR: ":8083", REGISTRY_DATA_DIR: "/var/lib/artifact-registry"}
+    volumes: [registry-data:/var/lib/artifact-registry]
+volumes: {registry-data: {}}

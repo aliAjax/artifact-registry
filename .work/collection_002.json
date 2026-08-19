@@ -1,0 +1,65 @@
+{
+  "sample_id": 202,
+  "session_id": "",
+  "bug_id": "ar-nil-zero-manifest-002",
+  "task_type": "bugfix",
+  "bug_category": "nil相关问题",
+  "repo_url": "",
+  "go_version": "golang:1.23; go 1.23.0; GOTOOLCHAIN=local",
+  "repro_determinism": "deterministic",
+  "user_query": "零值的 Manifest 一调 PutOne 就崩，ReferenceGraph 零值跑 AddManifest 也崩。贴一段：\npanic: assignment to entry in nil map [recovered, repanicked]\ngoroutine 21 [running]:\ntesting.tRunner.func1.2(...)\n\t/opt/homebrew/Cellar/go/1.26.6/libexec/src/testing/testing.go:1974\n\t/opt/homebrew/Cellar/go/1.26.6/libexec/src/runtime/panic.go:860\nartifact-registry/internal/domain.(*Manifest).SetAnnotation(...)\n麻烦帮我修好。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/domain -run '^TestZeroValueManifestPutOne$' -count=1\ngo test ./internal/domain -run '^TestZeroValueManifestAddTags$' -count=1\ngo test ./internal/domain -run '^TestZeroValueReferenceGraphAddManifest$' -count=1\ngo test ./internal/domain -run '^TestZeroValueReferenceGraphRemove$' -count=1",
+  "gold_root_cause": "文件: internal/domain/manifest.go, internal/domain/validation.go 符号: Manifest.SetAnnotation, ReferenceGraph.AddManifest 机制: 零值构造不惰性初始化 Annotations/Edges/Reverse map，写入 nil map 直接 panic",
+  "gold_patch": "",
+  "success_criteria": "1. 零值 Manifest 的 SetAnnotation/AddAnnotations 不许 panic，零值 ReferenceGraph 的 AddManifest/Reachable/Remove 也不许 panic；2. 改好以后这五条连跑 20 遍全绿；3. 去掉任意一条惰性初始化，对应测试马上又崩又红；4. 完整回归无异常，只看对外表现。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "",
+  "creator": "",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "zero_manifest_set_annotation",
+        "description": "零值 Manifest.SetAnnotation 不 panic",
+        "test": "TestZeroValueManifestPutOne",
+        "command": "go test ./internal/domain -run '^TestZeroValueManifestPutOne$' -count=1",
+        "paths": [
+          "internal/domain/manifest.go"
+        ]
+      },
+      {
+        "id": "zero_manifest_add_annotations",
+        "description": "零值 Manifest.AddAnnotations 不 panic",
+        "test": "TestZeroValueManifestAddTags",
+        "command": "go test ./internal/domain -run '^TestZeroValueManifestAddTags$' -count=1",
+        "paths": [
+          "internal/domain/manifest.go"
+        ]
+      },
+      {
+        "id": "zero_graph_add_manifest",
+        "description": "零值 ReferenceGraph.AddManifest 不 panic",
+        "test": "TestZeroValueReferenceGraphAddManifest",
+        "command": "go test ./internal/domain -run '^TestZeroValueReferenceGraphAddManifest$' -count=1",
+        "paths": [
+          "internal/domain/validation.go"
+        ]
+      },
+      {
+        "id": "zero_graph_remove",
+        "description": "零值 ReferenceGraph.Remove 不 panic",
+        "test": "TestZeroValueReferenceGraphRemove",
+        "command": "go test ./internal/domain -run '^TestZeroValueReferenceGraphRemove$' -count=1",
+        "paths": [
+          "internal/domain/validation.go"
+        ]
+      }
+    ]
+  }
+}

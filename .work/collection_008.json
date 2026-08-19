@@ -1,0 +1,65 @@
+{
+  "sample_id": 208,
+  "session_id": "",
+  "bug_id": "ar-state-quota-ledger-008",
+  "task_type": "diagnosis",
+  "bug_category": "其他问题",
+  "repo_url": "",
+  "go_version": "golang:1.23; go 1.23.0; GOTOOLCHAIN=local",
+  "repro_determinism": "deterministic",
+  "user_query": "quota 的 reservation 从 committed 又能转回 reserved，状态写进去读出来还是旧的，按状态数数量也多一个。先别改代码，帮忙查一下原因。",
+  "trajectory": "",
+  "verify_cmds": "go test ./internal/quota -run '^TestMeterAddOverLimit$' -count=1\ngo test ./internal/quota -run '^TestLedgerRejectsBadMove$' -count=1\ngo test ./internal/quota -run '^TestLedgerPersistsState$' -count=1\ngo test ./internal/quota -run '^TestLedgerCountByState$' -count=1",
+  "gold_root_cause": "文件: internal/quota/meter.go, internal/quota/ledger.go 符号: Meter.Add, Ledger.Put, Ledger.CountByState 机制: 状态机转换表把 reserved 目标当成无条件创建，转换后写回旧状态，越限判定与计数边界错位",
+  "gold_patch": "",
+  "success_criteria": "1. 计量要正确处理越限边界，committed 不能转回 reserved，转换后要持久化新状态，按状态计数要准确；2. 排查过程不能改一个字符，diff 得是零；3. 结论要写明具体文件和三处状态机错位；4. 讲明白为什么状态和计数都不对。",
+  "verify_result": "",
+  "harness": "",
+  "generator_model": "",
+  "worker": "",
+  "creator": "",
+  "qc_result": "",
+  "qc_note": "",
+  "sync_feishu": "",
+  "coverage_contract": {
+    "version": 1,
+    "claims": [
+      {
+        "id": "meter_add_over_limit",
+        "description": "Meter.Add 正确判定越限",
+        "test": "TestMeterAddOverLimit",
+        "command": "go test ./internal/quota -run '^TestMeterAddOverLimit$' -count=1",
+        "paths": [
+          "internal/quota/meter.go"
+        ]
+      },
+      {
+        "id": "ledger_rejects_invalid_transition",
+        "description": "Ledger 拒绝非法转换",
+        "test": "TestLedgerRejectsBadMove",
+        "command": "go test ./internal/quota -run '^TestLedgerRejectsBadMove$' -count=1",
+        "paths": [
+          "internal/quota/ledger.go"
+        ]
+      },
+      {
+        "id": "ledger_persists_state",
+        "description": "Ledger 持久化新状态",
+        "test": "TestLedgerPersistsState",
+        "command": "go test ./internal/quota -run '^TestLedgerPersistsState$' -count=1",
+        "paths": [
+          "internal/quota/ledger.go"
+        ]
+      },
+      {
+        "id": "ledger_count_by_state",
+        "description": "Ledger.CountByState 准确",
+        "test": "TestLedgerCountByState",
+        "command": "go test ./internal/quota -run '^TestLedgerCountByState$' -count=1",
+        "paths": [
+          "internal/quota/ledger.go"
+        ]
+      }
+    ]
+  }
+}

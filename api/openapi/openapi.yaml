@@ -1,0 +1,8 @@
+openapi: 3.0.3
+info:
+  title: Content Addressable Artifact Registry
+  version: 1.0.0
+paths:
+  /v2/: {get: {responses: {'200': {description: available}}}}
+  /api/v1/repositories: {get: {responses: {'200': {description: paginated repositories}}}, post: {responses: {'201': {description: created}}}}
+  /api/v1/gc/dry-run: {post: {responses: {'200': {description: mark and sweep report}}}}

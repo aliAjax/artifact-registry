@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: {name: artifact-registry}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: artifact-registry}}
+  template:
+    metadata: {labels: {app: artifact-registry}}
+    spec:
+      containers:
+        - {name: registry, image: artifact-registry:local, ports: [{containerPort: 8083}], readinessProbe: {httpGet: {path: /readyz, port: 8083}}, livenessProbe: {httpGet: {path: /healthz, port: 8083}}}
