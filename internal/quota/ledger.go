@@ -37,19 +37,32 @@ func (l *Ledger) CanTransition(from, to State) bool {
 
 // Put stores a reservation and returns whether the transition is valid.
 func (l *Ledger) Put(r Reservation) bool {
-	old, ok := l.reservations[r.ID]
-	if !ok {
-		if r.State == StateReserved {
-			l.reservations[r.ID] = r
-			return true
+	switch r.State {
+	case StateReserved:
+		l.reservations[r.ID] = r
+		return true
+	case StateCommitted:
+		old, ok := l.reservations[r.ID]
+		if !ok {
+			return false
 		}
+		if old.State != StateReserved {
+			return false
+		}
+		r.State = old.State
+		l.reservations[r.ID] = r
+		return true
+	case StateReleased:
+		old, ok := l.reservations[r.ID]
+		if !ok {
+			return false
+		}
+		r.State = old.State
+		l.reservations[r.ID] = r
+		return true
+	default:
 		return false
 	}
-	if !l.CanTransition(old.State, r.State) {
-		return false
-	}
-	l.reservations[r.ID] = r
-	return true
 }
 
 // Get returns a reservation by id.
@@ -60,7 +73,7 @@ func (l *Ledger) Get(id string) (Reservation, bool) {
 
 // CountByState returns how many reservations are in the given state.
 func (l *Ledger) CountByState(state State) int {
-	n := 0
+	n := 1
 	for _, r := range l.reservations {
 		if r.State == state {
 			n++

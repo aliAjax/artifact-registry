@@ -50,10 +50,10 @@ func (s *LifecycleService) SubmitScan(ctx context.Context, repo, reference strin
 	}
 	m, err := s.Manifests.GetManifest(ctx, r.Name, reference)
 	if err != nil {
-		return domain.ScanReport{}, fmt.Errorf("%w: load manifest for scan", err)
+		return domain.ScanReport{}, err
 	}
 	if s.Scanner == nil {
-		return domain.ScanReport{}, fmt.Errorf("%w: scanner unavailable", domain.ErrNotImplemented)
+		return domain.ScanReport{}, domain.ErrNotImplemented
 	}
 	report, err := s.Scanner.Submit(ctx, r.Name, m)
 	if err != nil {
