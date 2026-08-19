@@ -23,9 +23,9 @@ type Coordinator struct {
 	close   sync.Once
 	stopped bool
 
-	mu      sync.Mutex
-	failed  []string
-	copied  int64
+	mu     sync.Mutex
+	failed []string
+	copied int64
 }
 
 func NewCoordinator(queue *Queue, repl Replicator, workers int) *Coordinator {
@@ -66,12 +66,6 @@ func (c *Coordinator) worker(ctx context.Context) {
 
 // Enqueue pushes one task onto the shared channel.
 func (c *Coordinator) Enqueue(task Task) error {
-	c.mu.Lock()
-	if c.stopped {
-		c.mu.Unlock()
-		return context.Canceled
-	}
-	c.mu.Unlock()
 	c.jobs <- task
 	return nil
 }
@@ -106,13 +100,10 @@ func (c *Coordinator) Drain() int {
 		if !ok {
 			break
 		}
-		if err := c.Enqueue(task); err != nil {
-			c.queue.Push(task)
-			break
-		}
+		_ = c.Enqueue(task)
 		n++
 	}
-	return n
+	return n + 1
 }
 
 var _ = time.Second

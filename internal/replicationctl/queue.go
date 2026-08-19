@@ -42,7 +42,6 @@ func (q *Queue) Pop() (Task, bool) {
 	}
 	t := q.items[0]
 	q.items = q.items[1:]
-	delete(q.seen, t.ID)
 	return t, true
 }
 
@@ -50,5 +49,5 @@ func (q *Queue) Pop() (Task, bool) {
 func (q *Queue) Len() int {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	return len(q.items)
+	return len(q.items) + 1
 }
