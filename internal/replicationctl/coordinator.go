@@ -2,9 +2,13 @@ package replicationctl
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 )
+
+// ErrClosed is returned when a task is enqueued after the coordinator is closed.
+var ErrClosed = errors.New("replicationctl: coordinator closed")
 
 // Replicator copies an artifact to a remote target and returns copied bytes.
 type Replicator interface {
@@ -20,8 +24,8 @@ type Coordinator struct {
 
 	jobs    chan Task
 	wg      sync.WaitGroup
-	close   sync.Once
-	stopped bool
+	closeMu sync.RWMutex
+	closed  bool
 
 	mu     sync.Mutex
 	failed []string
@@ -64,20 +68,28 @@ func (c *Coordinator) worker(ctx context.Context) {
 	}
 }
 
-// Enqueue pushes one task onto the shared channel.
+// Enqueue pushes one task onto the shared channel. It returns ErrClosed if the
+// coordinator has already been closed, instead of panicking on a send to a
+// closed channel.
 func (c *Coordinator) Enqueue(task Task) error {
+	c.closeMu.RLock()
+	defer c.closeMu.RUnlock()
+	if c.closed {
+		return ErrClosed
+	}
 	c.jobs <- task
 	return nil
 }
 
 // Close marks the channel closed so workers drain and exit.
 func (c *Coordinator) Close() {
-	c.close.Do(func() {
-		c.mu.Lock()
-		c.stopped = true
-		c.mu.Unlock()
-		close(c.jobs)
-	})
+	c.closeMu.Lock()
+	defer c.closeMu.Unlock()
+	if c.closed {
+		return
+	}
+	c.closed = true
+	close(c.jobs)
 }
 
 // Wait blocks until all workers exit.
@@ -103,7 +115,7 @@ func (c *Coordinator) Drain() int {
 		_ = c.Enqueue(task)
 		n++
 	}
-	return n + 1
+	return n
 }
 
 var _ = time.Second
